@@ -15,11 +15,19 @@ log = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # One pool, kept under the Supabase session pooler's 15-client cap.
+    # Without it every request opens its own connection and a burst is rejected.
+    # Use the table's engine: tests point that at SQLite, which has no pool.
+    engine = Transaction._meta.db
+    if engine.engine_type == "postgres":
+        await engine.start_connection_pool(min_size=1, max_size=8)
     try:
         await resume_processing(settings.process_delay_seconds)
     except Exception:
         log.exception("startup sweep failed; the next start will retry it")
     yield
+    if engine.engine_type == "postgres" and engine.pool:
+        await engine.close_connection_pool()
 
 
 app = FastAPI(
