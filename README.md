@@ -2,6 +2,14 @@
 
 Python service for the Confluencr full-stack assessment. It accepts a payment webhook, returns 202, and finishes the transaction in the background.
 
+Public API: http://13.202.16.144:8000
+
+Swagger UI: http://13.202.16.144:8000/docs
+
+## Why this stack
+
+FastAPI returns the 202 before the background task runs, so the 30-second wait never sits in the request. Piccolo is the table and the migration command (`piccolo migrations forwards app`), so a reviewer can create the schema from the repo without a second tool. Postgres is Supabase, in `ap-south-1`. The deployed box is IPv4-only, so it uses the session pooler rather than the IPv6 direct host. One shared connection pool stays under that pooler's 15-client cap, which is what keeps a burst of webhooks from being dropped.
+
 ## Run
 
 ```bash
