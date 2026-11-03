@@ -1,0 +1,21 @@
+# Isolated from the other stacks on this host. No shared network, volume, or env file.
+name: confluencr
+
+services:
+  api:
+    build: .
+    image: confluencr-api:latest
+    restart: unless-stopped
+    env_file:
+      - /etc/confluencr.env
+    ports:
+      - "8000:8000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 256m
+    pids_limit: 128
